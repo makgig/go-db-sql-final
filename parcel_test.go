@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
 	"time"
@@ -53,13 +54,12 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 	require.NotZero(t, id)
 
+	parcel.Number = id
+
 	// get
 	storedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Client, storedParcel.Client)
-	require.Equal(t, parcel.Status, storedParcel.Status)
-	require.Equal(t, parcel.Address, storedParcel.Address)
-	require.Equal(t, parcel.CreatedAt, storedParcel.CreatedAt)
+	require.Equal(t, parcel, storedParcel)
 
 	// delete
 	err = store.Delete(id)
@@ -67,6 +67,7 @@ func TestAddGetDelete(t *testing.T) {
 
 	_, err = store.Get(id)
 	require.Error(t, err)
+	assert.ErrorIs(t, err, sql.ErrNoRows)
 }
 
 func TestSetAddress(t *testing.T) {
@@ -120,7 +121,7 @@ func TestSetStatus(t *testing.T) {
 	// check
 	storedParcel, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, newStatus, storedParcel.Status)
+	assert.Equal(t, newStatus, storedParcel.Status)
 }
 
 func TestGetByClient(t *testing.T) {
@@ -158,7 +159,7 @@ func TestGetByClient(t *testing.T) {
 	// get by client
 	storedParcels, err := store.GetByClient(client)
 	require.NoError(t, err)
-	require.Len(t, storedParcels, len(parcels))
+	assert.Len(t, storedParcels, len(parcels))
 
 	// check
 	for _, parcel := range storedParcels {
